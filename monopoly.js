@@ -43,11 +43,21 @@ const CELL_NAMES = [
     "ул. Арбат",
 ];
 let position = 0;
+let escapeAttempt = 0;
+let isPrisoner = false;
 
 // Рассчитать процент
 function calculatePercent(value) {
     const percent = (value * 100).toFixed(2);
     return `${percent}%`;
+}
+
+// Рассчитать вероятности
+function calculateProbabilities() {
+    const totalVisits = VISITS.reduce((sum, count) => sum + count, 0);
+    const probabilities = VISITS.map(count => count / totalVisits);
+
+    return probabilities;
 }
 
 // Бросить кубик
@@ -63,10 +73,45 @@ function rollDices() {
     return { sum: dice1 + dice2, isDouble: dice1 === dice2 };
 }
 
+// Инкрементировать счётчик посещений
+function incrementVisits(index) {
+    VISITS[index]++;
+}
+
 // Сменить позицию
-function changePosition(diceSum) {
-    position = (position + diceSum) % TOTAL_CELLS;
-    VISITS[position]++;
+function changePosition(newPosition) {
+    position = newPosition;
+    incrementVisits(position);
+}
+
+// Сменить позицию после броска кубиков
+function changePositionAfterDicesRoll(diceSum) {
+    changePosition((position + diceSum) % TOTAL_CELLS);
+}
+
+// Попасть в тюрьму
+function goToPrison() {
+    changePosition(10);
+    isPrisoner = true;
+}
+
+// Попытаться сбежать из тюрьмы
+function tryToEscape() {
+    const { sum: diceSum, isDouble: exitDouble } = rollDices();
+
+    if (exitDouble || escapeAttempt == 3) {
+        escapeFromPrison(diceSum);
+    } else {
+        escapeAttempt++;
+        incrementVisits(10);
+    }
+}
+
+// Сбежать из тюрьмы
+function escapeFromPrison(diceSum) {
+    changePositionAfterDicesRoll(diceSum);
+    isPrisoner = false;
+    escapeAttempt = 0;
 }
 
 // Симулировать монополию
@@ -74,33 +119,21 @@ function simulateMonopoly(numTurns) {
     for (let turn = 0; turn < numTurns; turn++) {
         const { sum: diceSum } = rollDices();
 
-        changePosition(diceSum);
-        if (position === 30) {
-            position = 10;
-            VISITS[10]++;
-        }
-        if (position === 10) {
-            const { sum: diceSum, isDouble: exitDouble } = rollDices();
-
-            if (exitDouble) {
-                changePosition(diceSum);
-            } else {
-                VISITS[10]++;
-            }
+        changePositionAfterDicesRoll(diceSum);
+        if (position === 10 && isPrisoner) {
+            tryToEscape();
+        } else if (position === 30) {
+            goToPrison();
         }
     }
-
-    const totalVisits = VISITS.reduce((sum, count) => sum + count, 0);
-    const probabilities = VISITS.map(count => count / totalVisits);
-
-    return probabilities;
+    return calculateProbabilities();
 }
 
 // Логировать результаты
 function logResults(numTurns, probabilities) {
     let totalProbability = 0;
 
-    console.log(`Результаты симуляции (${numTurns} ходов):`);
+    console.log(`Результаты симуляции (${numTurns.toLocaleString('ru-RU')} ходов):`);
     console.log('');
     for (let i = 0; i < TOTAL_CELLS; i++) {
         const probability = probabilities[i];
@@ -111,6 +144,7 @@ function logResults(numTurns, probabilities) {
     }
     console.log('');
     console.log('Сумма вероятностей:', calculatePercent(totalProbability));
+    console.log('');
 }
 
 // Запустить симуляцию
