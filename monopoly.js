@@ -323,6 +323,7 @@ const CELLS = [
     },
 ];
 let position = 0;
+let doubleCounter = 0;
 let escapeAttempt = 0;
 let isPrisoner = false;
 
@@ -343,6 +344,15 @@ function calculateProbabilities() {
     const probabilities = VISITS.map(count => count / totalVisits);
 
     return probabilities;
+}
+
+// Обновить счётчик дублей
+function updateDoubleCounter(isDouble) {
+    if (isDouble) {
+        doubleCounter++;
+    } else {
+        doubleCounter = 0;
+    }
 }
 
 // Добавить ноль для однозначных чисел
@@ -467,9 +477,14 @@ function receiveChance() {
 // Симулировать монополию
 function simulateMonopoly(numTurns) {
     for (let turn = 0; turn < numTurns; turn++) {
-        const { sum: diceSum } = rollDices();
+        const { sum: diceSum, isDouble: isDouble } = rollDices();
 
-        changePositionAfterDicesRoll(diceSum);
+        updateDoubleCounter(isDouble);
+        if (doubleCounter < 3) {
+            changePositionAfterDicesRoll(diceSum);
+        } else {
+            goToPrison();
+        }
         switch (position) {
             case 2, 17, 33:
                 receiveCommunityChest();
