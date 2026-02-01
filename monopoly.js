@@ -1,5 +1,7 @@
+const PLAYERS = 4;
 const TOTAL_CELLS = 40;
 const VISITS = new Array(TOTAL_CELLS).fill(0);
+const STREETS = [];
 const CELLS = [
     { name: "Вперёд" },
     {
@@ -7,7 +9,6 @@ const CELLS = [
         cost: 60,
         house_cost: 50,
         rent: 2,
-        rent_set: 4,
         rent_house_1: 10,
         rent_house_2: 30,
         rent_house_3: 90,
@@ -20,7 +21,6 @@ const CELLS = [
         cost: 60,
         house_cost: 50,
         rent: 4,
-        rent_set: 8,
         rent_house_1: 20,
         rent_house_2: 60,
         rent_house_3: 180,
@@ -41,7 +41,6 @@ const CELLS = [
         cost: 100,
         house_cost: 50,
         rent: 6,
-        rent_set: 12,
         rent_house_1: 30,
         rent_house_2: 90,
         rent_house_3: 270,
@@ -54,7 +53,6 @@ const CELLS = [
         cost: 100,
         house_cost: 50,
         rent: 6,
-        rent_set: 12,
         rent_house_1: 30,
         rent_house_2: 90,
         rent_house_3: 270,
@@ -66,7 +64,6 @@ const CELLS = [
         cost: 120,
         house_cost: 50,
         rent: 8,
-        rent_set: 16,
         rent_house_1: 40,
         rent_house_2: 100,
         rent_house_3: 300,
@@ -79,7 +76,6 @@ const CELLS = [
         cost: 140,
         house_cost: 100,
         rent: 10,
-        rent_set: 20,
         rent_house_1: 50,
         rent_house_2: 150,
         rent_house_3: 450,
@@ -97,7 +93,6 @@ const CELLS = [
         cost: 140,
         house_cost: 100,
         rent: 10,
-        rent_set: 20,
         rent_house_1: 50,
         rent_house_2: 150,
         rent_house_3: 450,
@@ -109,7 +104,6 @@ const CELLS = [
         cost: 160,
         house_cost: 100,
         rent: 12,
-        rent_set: 24,
         rent_house_1: 60,
         rent_house_2: 180,
         rent_house_3: 500,
@@ -129,7 +123,6 @@ const CELLS = [
         cost: 180,
         house_cost: 100,
         rent: 14,
-        rent_set: 28,
         rent_house_1: 70,
         rent_house_2: 200,
         rent_house_3: 550,
@@ -142,7 +135,6 @@ const CELLS = [
         cost: 180,
         house_cost: 100,
         rent: 14,
-        rent_set: 28,
         rent_house_1: 70,
         rent_house_2: 200,
         rent_house_3: 550,
@@ -154,7 +146,6 @@ const CELLS = [
         cost: 200,
         house_cost: 100,
         rent: 16,
-        rent_set: 32,
         rent_house_1: 80,
         rent_house_2: 220,
         rent_house_3: 600,
@@ -167,7 +158,6 @@ const CELLS = [
         cost: 220,
         house_cost: 150,
         rent: 18,
-        rent_set: 36,
         rent_house_1: 90,
         rent_house_2: 250,
         rent_house_3: 700,
@@ -180,7 +170,6 @@ const CELLS = [
         cost: 220,
         house_cost: 150,
         rent: 18,
-        rent_set: 36,
         rent_house_1: 90,
         rent_house_2: 250,
         rent_house_3: 700,
@@ -192,7 +181,6 @@ const CELLS = [
         cost: 240,
         house_cost: 150,
         rent: 20,
-        rent_set: 40,
         rent_house_1: 100,
         rent_house_2: 300,
         rent_house_3: 750,
@@ -212,7 +200,6 @@ const CELLS = [
         cost: 260,
         house_cost: 150,
         rent: 22,
-        rent_set: 44,
         rent_house_1: 110,
         rent_house_2: 330,
         rent_house_3: 800,
@@ -224,7 +211,6 @@ const CELLS = [
         cost: 260,
         house_cost: 150,
         rent: 22,
-        rent_set: 44,
         rent_house_1: 110,
         rent_house_2: 330,
         rent_house_3: 800,
@@ -242,7 +228,6 @@ const CELLS = [
         cost: 280,
         house_cost: 150,
         rent: 24,
-        rent_set: 48,
         rent_house_1: 120,
         rent_house_2: 360,
         rent_house_3: 850,
@@ -255,7 +240,6 @@ const CELLS = [
         cost: 300,
         house_cost: 200,
         rent: 26,
-        rent_set: 52,
         rent_house_1: 130,
         rent_house_2: 390,
         rent_house_3: 900,
@@ -267,7 +251,6 @@ const CELLS = [
         cost: 300,
         house_cost: 200,
         rent: 26,
-        rent_set: 52,
         rent_house_1: 130,
         rent_house_2: 390,
         rent_house_3: 900,
@@ -280,7 +263,6 @@ const CELLS = [
         cost: 320,
         house_cost: 200,
         rent: 28,
-        rent_set: 56,
         rent_house_1: 150,
         rent_house_2: 450,
         rent_house_3: 1000,
@@ -301,7 +283,6 @@ const CELLS = [
         cost: 350,
         house_cost: 200,
         rent: 35,
-        rent_set: 70,
         rent_house_1: 175,
         rent_house_2: 500,
         rent_house_3: 1100,
@@ -314,7 +295,6 @@ const CELLS = [
         cost: 400,
         house_cost: 200,
         rent: 50,
-        rent_set: 100,
         rent_house_1: 200,
         rent_house_2: 600,
         rent_house_3: 1400,
@@ -344,6 +324,98 @@ function calculateProbabilities() {
     const probabilities = VISITS.map(count => count / totalVisits);
 
     return probabilities;
+}
+
+// Рассчитать рейтинг
+function calculateRating(currentProfit, previousProfit, payback) {
+    const delta = (currentProfit - previousProfit) / previousProfit;
+
+    return 0.7 * currentProfit + 0.2 * (1 / payback) + 0.1 * delta;
+}
+
+// Рассчитать средний рейтинг
+function calculateAverageRating(rating) {
+    const common = 0.1 * rating.common;
+    const set = 0.2 * rating.set;
+    const house_1 = 0.3 * rating.house_1;
+    const house_2 = 0.6 * rating.house_2;
+    const house_3 = 0.8 * rating.house_3;
+    const house_4 = 0.4 * rating.house_4;
+    const hotel = 0.3 * rating.hotel;
+
+    return (common + set + house_1 + house_2 + house_3 + house_4 + hotel) / 2.7;
+}
+
+// Рассчитать выгодность улицы
+function calculateStreetProfit(element, cell, prob) {
+    const streetCost = element.cost;
+    const houseCost = element.house_cost;
+    const rent = element.rent;
+    const expectedIncomePerTurn = {
+        common: rent * prob,
+        set: rent * 2 * prob,
+        house_1: element.rent_house_1 * prob,
+        house_2: element.rent_house_2 * prob,
+        house_3: element.rent_house_3 * prob,
+        house_4: element.rent_house_4 * prob,
+        hotel: element.rent_hotel * prob,
+    };
+    const totalDevelopmentCost = {
+        common: streetCost,
+        house_1: streetCost + houseCost,
+        house_2: streetCost + houseCost * 2,
+        house_3: streetCost + houseCost * 3,
+        house_4: streetCost + houseCost * 4,
+        hotel: streetCost + houseCost * 5,
+    };
+    const profit = {
+        common: expectedIncomePerTurn.common / totalDevelopmentCost.common,
+        set: expectedIncomePerTurn.set / totalDevelopmentCost.common,
+        house_1: expectedIncomePerTurn.house_1 / totalDevelopmentCost.house_1,
+        house_2: expectedIncomePerTurn.house_2 / totalDevelopmentCost.house_2,
+        house_3: expectedIncomePerTurn.house_3 / totalDevelopmentCost.house_3,
+        house_4: expectedIncomePerTurn.house_4 / totalDevelopmentCost.house_4,
+        hotel: expectedIncomePerTurn.hotel / totalDevelopmentCost.hotel,
+    };
+    const payback = {
+        common: 1 / (profit.common * PLAYERS),
+        set: 1 / (profit.common * PLAYERS),
+        house_1: 1 / (profit.house_1 * PLAYERS),
+        house_2: 1 / (profit.house_2 * PLAYERS),
+        house_3: 1 / (profit.house_3 * PLAYERS),
+        house_4: 1 / (profit.house_4 * PLAYERS),
+        hotel: 1 / (profit.hotel * PLAYERS),
+    };
+    const rating = {
+        common: calculateRating(profit.common, profit.common, payback.common),
+        set: calculateRating(profit.set, profit.common, payback.set),
+        house_1: calculateRating(profit.house_1, profit.set, payback.house_1),
+        house_2: calculateRating(profit.house_2, profit.house_1, payback.house_2),
+        house_3: calculateRating(profit.house_3, profit.house_2, payback.house_3),
+        house_4: calculateRating(profit.house_4, profit.house_3, payback.house_4),
+        hotel: calculateRating(profit.hotel, profit.house_4, payback.hotel),
+    }
+    const street = {
+        name: element.name,
+        cell: cell,
+        rating: calculateAverageRating(rating)
+    };
+
+    STREETS.push(street);
+}
+
+// Перерасчитать рейтинг улиц
+function recalculateRating() {
+    let maxRating = 0;
+
+    STREETS.forEach(street => {
+        const rating = street.rating;
+
+        if (rating > maxRating) {
+            maxRating = rating;
+        }
+    });
+    STREETS.forEach(street => street.rating /= maxRating);
 }
 
 // Обновить счётчик дублей
@@ -505,25 +577,43 @@ function simulateMonopoly(numTurns) {
     return calculateProbabilities();
 }
 
-// Логировать результаты
-function logResults(numTurns, probabilities) {
+// Логировать вероятности попасть на клетку
+function logProbabilities(numTurns, probabilities) {
     const cellProbabilities = probabilities.map((prob, index) => ({
         cell: index,
         prob: prob
     }));
 
-    console.log(`Результаты симуляции (${numTurns.toLocaleString('ru-RU')} ходов):`);
+    console.log(`Результаты симуляции (${PLAYERS + 1} игроков, ${numTurns.toLocaleString('ru-RU')} ходов):`);
     console.log('');
+    console.log('> Вероятность попасть на клетку: <');
     cellProbabilities.sort((a, b) => b.prob - a.prob);
     cellProbabilities.forEach(({ cell, prob }, index) => {
-        const indexNumber = padStart(index + 1);
-        const cellNumber = padStart(cell);
         const element = CELLS[cell];
-        let info = `${indexNumber}. Клетка ${cellNumber}: ${calculatePercent(prob)} \t("${element.name}")`;
+        const indexNumber = `\t${padStart(index + 1)}.`;
+        const cellNumber = `Клетка ${padStart(cell)}`;
+        const name = `"${element.name}":`.padEnd(30, ' ');
+        const probPercent = calculatePercent(prob);
 
-        if (element.cost !== undefined)
-            info = `${info} +${element.cost}`;
-        console.log(info);
+        if (element.house_cost !== undefined) {
+            calculateStreetProfit(element, cell, prob);
+        }
+        console.log(indexNumber, cellNumber, name, probPercent);
+    });
+    console.log('');
+}
+
+// Логировать рейтинг улиц
+function logRating() {
+    console.log(`> Рейтинг улиц: <`);
+    STREETS.sort((a, b) => b.rating - a.rating)
+    STREETS.forEach(({ name, cell, rating }, index) => {
+        const indexNumber = `\t${padStart(index + 1)}.`;
+        const cellNumber = `Клетка ${padStart(cell)}`;
+        const streetName = `"${name}":`.padEnd(30, ' ');
+        const streetRating = `\t${calculatePercent(rating)}`;
+
+        console.log(indexNumber, cellNumber, streetName, streetRating);
     });
     console.log('');
 }
@@ -536,7 +626,9 @@ function runSimulation() {
     const numTurns = 100_000_000;
     const probabilities = simulateMonopoly(numTurns);
 
-    logResults(numTurns, probabilities);
+    logProbabilities(numTurns, probabilities);
+    recalculateRating();
+    logRating();
     console.timeEnd('Время симуляции');
 }
 
